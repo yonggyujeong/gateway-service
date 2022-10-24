@@ -14,6 +14,43 @@ spring:
   cloud:
     gateway:
       routes:
+#        - id: user-service
+#          uri: lb://USER-SERVICE
+#          predicates:
+#            - Path=/user-service/**
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/login
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie # 매번 새로운 값으로 인식하기위해 헤더값 초기화
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} # 서비스단에서 prefix 없애기
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/users #회원가입
+            - Method=POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} # 서비스단에서 prefix 없애기
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/** # 다른 GET방식 메서드들
+            - Method=GET
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} # 서비스단에서 prefix 없애기
+            - AuthorizationHeaderFilter
+        - id: catalog-service
+          uri: lb://CATALOG-SERVICE
+          predicates:
+            - Path=/catalog-service/**
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/order-service/**
         - id: first-service
           uri: lb://MY-FIRST-SERVICE # 이동할 주소
           predicates:
@@ -42,4 +79,5 @@ spring:
             preLogger: true
             postLogger: true
 
-
+token:
+  secret: user-token
