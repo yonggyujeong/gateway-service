@@ -11,6 +11,11 @@ eureka:
 spring:
   application:
     name: apigateway-service
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
   cloud:
     gateway:
       routes:
@@ -43,6 +48,15 @@ spring:
             - RemoveRequestHeader=Cookie
             - RewritePath=/user-service/(?<segment>.*), /$\{segment} # 서비스단에서 prefix 없애기
             - AuthorizationHeaderFilter
+
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/user-service/actuator/** # 다른 GET방식 메서드들
+            - Method=GET,POST
+          filters:
+            - RemoveRequestHeader=Cookie
+            - RewritePath=/user-service/(?<segment>.*), /$\{segment} # 서비스단에서 prefix 없애기
         - id: catalog-service
           uri: lb://CATALOG-SERVICE
           predicates:
@@ -79,5 +93,12 @@ spring:
             preLogger: true
             postLogger: true
 
+
+
 token:
   secret: user-token
+management:
+  endpoints:
+    web:
+      exposure:
+        include: refresh, health, beans, httptrace, busrefresh, env
